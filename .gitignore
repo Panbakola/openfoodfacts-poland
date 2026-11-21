@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# Raw data downloads (surowe zrzuty)
+*.parquet
+*.csv
+*.jsonl
+*.gz
+
+# Build output – do repozytorium trafia tylko skompresowany .zip oraz version.json
+dist/poland_products.db
