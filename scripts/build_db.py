@@ -42,7 +42,8 @@ def main():
             "SELECT CAST(code AS TEXT) AS code, "
             "COALESCE((SELECT pn.text FROM UNNEST(product_name) AS pn WHERE pn.lang = 'pl' LIMIT 1), "
             "(SELECT pn.text FROM UNNEST(product_name) AS pn LIMIT 1)) AS product_name, "
-            "COALESCE(brands, '') AS brands "
+            "COALESCE(brands, '') AS brands, "
+            "COALESCE(image_small_url, '') AS image_small_url "  # --- DODANE ---
             "FROM read_parquet('" + PARQUET_URL + "') "
             "WHERE code IS NOT NULL AND CAST(code AS TEXT) <> '' "
             "AND COALESCE((SELECT pn.text FROM UNNEST(product_name) AS pn WHERE pn.lang = 'pl' LIMIT 1), "
@@ -65,13 +66,14 @@ def main():
             "CREATE TABLE products ("
             "code    TEXT PRIMARY KEY, "
             "product_name TEXT, "
-            "brands  TEXT)"
+            "brands  TEXT, "
+            "image_small_url TEXT DEFAULT ''"
         )
         sqlite_con.execute("CREATE INDEX idx_code ON products(code);")
         sqlite_con.commit()
 
         log("Kopiowanie danych do SQLite (partie po " + str(BATCH_SIZE) + "…)")
-        cursor = con.execute("SELECT code, product_name, brands FROM poland_products")
+        cursor = con.execute("SELECT code, product_name, brands, image_small_url FROM poland_products")
 
         total_inserted = 0
         while True:
@@ -79,7 +81,7 @@ def main():
             if not rows:
                 break
             sqlite_con.executemany(
-                "INSERT OR REPLACE INTO products (code, product_name, brands) VALUES (?, ?, ?)",
+                "INSERT OR REPLACE INTO products (code, product_name, brands, image_small_url) VALUES (?, ?, ?, ?)",
                 rows,
             )
             sqlite_con.commit()
